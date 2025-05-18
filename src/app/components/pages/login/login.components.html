@@ -1,0 +1,16 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2>Login</h2>
+    <form (submit)="login(email.value, password.value); $event.preventDefault()">
+      <input #email type="email" placeholder="Email" required />
+      <input #password type="password" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
+
+    <p id="error-message" class="error-message"></p>
+
+    <div class="link">
+      <a routerLink="/cadastro">Não tem uma conta? Cadastre-se</a>
+    </div>
+  </div>
+</div>

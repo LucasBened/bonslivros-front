@@ -1,1 +1,33 @@
 /* You can add global styles to this file, and also import other style files */
+/* Garante fundo branco e textos escuros na tabela do Angular Material */
+table.mat-elevation-z8 {
+  background-color: white !important;
+  color: #212121 !important;
+}
+
+/* Cabeçalho da tabela */
+.mat-header-cell {
+  background-color: #f5f5f5 !important;
+  color: #212121 !important;
+  font-weight: bold;
+}
+
+/* Células de dados */
+.mat-cell {
+  background-color: white !important;
+  color: #212121 !important;
+}
+
+/* Linha de dados */
+.mat-row {
+  background-color: white !important;
+}
+
+/* Borda das células */
+.mat-header-cell, .mat-cell {
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

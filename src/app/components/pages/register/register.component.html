@@ -1,0 +1,18 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2>Cadastro</h2>
+    <form (submit)="register(name.value, email.value, password.value, cpf.value); $event.preventDefault()">
+      <input #name type="text" placeholder="Nome completo" required />
+      <input #email type="email" placeholder="Email" required />
+      <input #password type="password" placeholder="Senha" required />
+      <input #cpf type="text" placeholder="CPF" required pattern="\d{11}" />
+      <button type="submit">Cadastrar</button>
+    </form>
+
+    <p id="msg" class="message"></p>
+
+    <div class="link">
+      <a routerLink="/login">Já tem uma conta? Entrar</a>
+    </div>
+  </div>
+</div>

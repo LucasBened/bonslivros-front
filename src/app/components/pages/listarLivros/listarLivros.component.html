@@ -1,0 +1,56 @@
+<div class="book-list-container">
+  <div class="book-form">
+    <h2>Adicionar Livro</h2>
+    <form
+      (submit)="
+        addBook(titulo.value, autor.value, ano.value);
+        titulo.value = '';
+        autor.value = '';
+        ano.value = '';
+        $event.preventDefault()
+      "
+    >
+      <input #titulo type="text" placeholder="Título" required />
+      <input #autor type="text" placeholder="Autor" required />
+      <input #ano type="number" placeholder="Ano" required />
+      <button type="submit" mat-raised-button color="primary">Adicionar Livro</button>
+    </form>
+
+    <div class="link">
+      <a routerLink="login">Sair</a>
+    </div>
+  </div>
+
+  <div class="book-table">
+    <h2>Livros Cadastrados</h2>
+
+    <table mat-table [dataSource]="books" class="mat-elevation-z8" *ngIf="books.length > 0">
+      <ng-container matColumnDef="titulo">
+        <th mat-header-cell *matHeaderCellDef> Título </th>
+        <td mat-cell *matCellDef="let book"> {{ book.titulo }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="autor">
+        <th mat-header-cell *matHeaderCellDef> Autor </th>
+        <td mat-cell *matCellDef="let book"> {{ book.autor }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="ano">
+        <th mat-header-cell *matHeaderCellDef> Ano </th>
+        <td mat-cell *matCellDef="let book"> {{ book.ano }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="acoes">
+        <th mat-header-cell *matHeaderCellDef> Ações </th>
+        <td mat-cell *matCellDef="let book; let i = index">
+          <button mat-button color="warn" (click)="deleteBook(i)">Excluir</button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <p *ngIf="books.length === 0">Nenhum livro cadastrado.</p>
+  </div>
+</div>
