@@ -8,12 +8,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // Para modal (opcional)
+import { MatDialogModule } from '@angular/material/dialog';
 
 import {
   ApiService,
-  BookRegisterPayload, // Usado para o formulário de adicionar
-  BookResponse, // Usado para listar e para o formulário de editar
+  BookRegisterPayload,
+  BookResponse,
 } from '../../../services/api.service';
 
 @Component({
@@ -28,7 +28,7 @@ import {
     MatFormFieldModule,
     MatInputModule,
     MatIconModule,
-    MatDialogModule, // Para modal (opcional)
+    MatDialogModule,
   ],
   templateUrl: './listarLivros.component.html',
   styleUrls: ['./listarLivros.component.css'],
@@ -45,31 +45,32 @@ export class BookListComponent implements OnInit {
   ];
 
   // Para o formulário de adicionar novo livro
-  newBookData: BookRegisterPayload = {
+  newBookData: Omit<BookRegisterPayload, 'autor'> & {
+    autor?: { id: number | null };
+  } = {
+    // Omit 'autor' para definir depois
     titulo: '',
-    autor: { id: 0 },
+    // autor: { id: 0 }, // Será definido com o ID do autor logado
     genero: '',
     editora: '',
     dataPublicacao: '',
   };
-  addAutorIdInput: number | null = null; // ID do autor para o formulário de adicionar
+  // REMOVIDO: addAutorIdInput: number | null = null;
 
   // Para o formulário de edição
   isEditing: boolean = false;
-  currentEditingBook: BookResponse | null = null; // Livro original que está a ser editado
+  currentEditingBook: BookResponse | null = null;
   editBookFormModel: {
-    // Modelo para o formulário de edição
     id: number;
     titulo: string;
-    autorId: number | null; // Apenas o ID do autor para o input do formulário de edição
+    // REMOVIDO: autorId: number | null;
     genero: string;
     editora: string;
     dataPublicacao: string;
   } = {
     id: 0,
     titulo: '',
-    autorId: null,
-    genero: '',
+    /* autorId: null, */ genero: '',
     editora: '',
     dataPublicacao: '',
   };
@@ -78,11 +79,7 @@ export class BookListComponent implements OnInit {
   messageType: 'success' | 'error' | 'info' = 'info';
   isLoading: boolean = false;
 
-  constructor(
-    private apiService: ApiService,
-    private router: Router,
-    public dialog: MatDialog // Para modal (opcional)
-  ) {}
+  constructor(private apiService: ApiService, private router: Router) {}
 
   ngOnInit(): void {
     console.log('BookListComponent: ngOnInit() chamado.');
@@ -107,30 +104,28 @@ export class BookListComponent implements OnInit {
         }
         this.isLoading = false;
       },
-      error: (err) => {
-        this.message = err.message || 'Falha ao carregar os livros.';
-        this.messageType = 'error';
-        this.isLoading = false;
-        if (err.status === 401 || err.status === 403) {
-          this.apiService.logout();
-          this.router.navigate(['/login']);
-        }
-      },
+      error: (err) => this.handleApiError(err, 'Falha ao carregar os livros.'),
     });
   }
 
   // --- Lógica para Adicionar Livro ---
   handleAddBook(): void {
+    const loggedInAuthorId = this.apiService.getLoggedInAuthorId();
+    if (loggedInAuthorId === null) {
+      this.message =
+        'Não foi possível identificar o autor logado. Faça login novamente.';
+      this.messageType = 'error';
+      return;
+    }
+
     if (
       !this.newBookData.titulo ||
-      this.addAutorIdInput === null ||
-      this.addAutorIdInput <= 0 ||
       !this.newBookData.genero ||
       !this.newBookData.editora ||
       !this.newBookData.dataPublicacao
     ) {
       this.message =
-        'Por favor, preencha todos os campos obrigatórios do livro, incluindo um ID de autor válido.';
+        'Por favor, preencha todos os campos obrigatórios do livro.';
       this.messageType = 'error';
       return;
     }
@@ -142,9 +137,13 @@ export class BookListComponent implements OnInit {
 
     this.isLoading = true;
     this.message = '';
+
     const payload: BookRegisterPayload = {
-      ...this.newBookData,
-      autor: { id: this.addAutorIdInput },
+      titulo: this.newBookData.titulo,
+      autor: { id: loggedInAuthorId }, // Usa o ID do autor logado
+      genero: this.newBookData.genero,
+      editora: this.newBookData.editora,
+      dataPublicacao: this.newBookData.dataPublicacao,
     };
 
     this.apiService.addBook(payload).subscribe({
@@ -154,12 +153,10 @@ export class BookListComponent implements OnInit {
         this.loadBooks();
         this.newBookData = {
           titulo: '',
-          autor: { id: 0 },
           genero: '',
           editora: '',
           dataPublicacao: '',
-        };
-        this.addAutorIdInput = null;
+        }; // Limpa formulário
         this.isLoading = false;
       },
       error: (err) => this.handleApiError(err, 'Falha ao adicionar o livro.'),
@@ -169,30 +166,38 @@ export class BookListComponent implements OnInit {
   // --- Lógica para Editar Livro ---
   startEditBook(book: BookResponse): void {
     this.isEditing = true;
-    this.currentEditingBook = book; // Guarda a referência ao livro original
-    // Preenche o modelo do formulário de edição com os dados do livro
+    this.currentEditingBook = { ...book }; // Cria uma cópia para evitar mutação direta do objeto na lista
+
     this.editBookFormModel = {
       id: book.id,
       titulo: book.titulo,
-      autorId: book.autor.id, // Apenas o ID do autor para o input
+      // autorId não é mais necessário no formulário, pois será o autor logado
       genero: book.genero,
       editora: book.editora,
       dataPublicacao: book.dataPublicacao,
     };
-    this.message = ''; // Limpa mensagens anteriores
-    // Se estiver a usar um modal, abriria o modal aqui.
-    // Por simplicidade, vamos mostrar/esconder um formulário na página.
+    this.message = '';
     console.log('Iniciando edição para:', book);
   }
 
   handleUpdateBook(): void {
+    const loggedInAuthorId = this.apiService.getLoggedInAuthorId();
+    if (loggedInAuthorId === null) {
+      this.message =
+        'Não foi possível identificar o autor logado para atualizar. Faça login novamente.';
+      this.messageType = 'error';
+      return;
+    }
+
     if (
       !this.currentEditingBook ||
-      this.editBookFormModel.autorId === null ||
-      this.editBookFormModel.autorId <= 0
+      !this.editBookFormModel.titulo ||
+      !this.editBookFormModel.genero ||
+      !this.editBookFormModel.editora ||
+      !this.editBookFormModel.dataPublicacao
     ) {
       this.message =
-        'Erro ao tentar atualizar. Dados do livro ou ID do autor inválidos.';
+        'Erro ao tentar atualizar. Preencha todos os campos do livro.';
       this.messageType = 'error';
       return;
     }
@@ -206,14 +211,10 @@ export class BookListComponent implements OnInit {
     this.isLoading = true;
     this.message = '';
 
-    // Prepara o payload para a API. O backend espera o objeto Livro completo.
     const updatePayload: BookResponse = {
       id: this.editBookFormModel.id,
       titulo: this.editBookFormModel.titulo,
-      autor: {
-        id: this.editBookFormModel.autorId,
-        nome: this.currentEditingBook.autor.nome,
-      }, // Mantém o nome original do autor se existir, ou envia só o ID.
+      autor: { id: loggedInAuthorId, nome: this.currentEditingBook.autor.nome }, // Usa ID do autor logado. Mantém nome original para exibição se não for mudar.
       genero: this.editBookFormModel.genero,
       editora: this.editBookFormModel.editora,
       dataPublicacao: this.editBookFormModel.dataPublicacao,
@@ -226,7 +227,7 @@ export class BookListComponent implements OnInit {
           this.message = 'Livro atualizado com sucesso!';
           this.messageType = 'success';
           this.loadBooks();
-          this.cancelEditBook(); // Limpa o estado de edição
+          this.cancelEditBook();
           this.isLoading = false;
         },
         error: (err) => this.handleApiError(err, 'Falha ao atualizar o livro.'),
@@ -236,11 +237,9 @@ export class BookListComponent implements OnInit {
   cancelEditBook(): void {
     this.isEditing = false;
     this.currentEditingBook = null;
-    // Limpa o modelo do formulário de edição
     this.editBookFormModel = {
       id: 0,
       titulo: '',
-      autorId: null,
       genero: '',
       editora: '',
       dataPublicacao: '',
@@ -248,7 +247,7 @@ export class BookListComponent implements OnInit {
     this.message = '';
   }
 
-  // --- Lógica para Deletar Livro ---
+  // --- Lógica para Deletar Livro (sem alterações) ---
   handleDeleteBook(bookId: number): void {
     if (bookId === null || bookId === undefined || isNaN(bookId)) {
       this.message = 'ID do livro inválido para exclusão.';
@@ -276,7 +275,6 @@ export class BookListComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  // Helper para tratar erros da API
   private handleApiError(err: any, defaultMessage: string): void {
     this.message = err.message || defaultMessage;
     this.messageType = 'error';
