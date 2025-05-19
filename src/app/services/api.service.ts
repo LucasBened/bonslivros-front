@@ -64,7 +64,7 @@ export class ApiService {
 
   // --- Métodos de Autenticação e Usuário ---
   register(userData: UserRegisterPayload): Observable<any> {
-    const url = `${this.baseUrl}/autor/registro`;
+    const url = `${this.baseUrl}/autor`;
     console.log('ApiService: Tentando registar utilizador:', userData);
     return this.http.post<any>(url, userData).pipe(
       tap((response) =>
