@@ -1,4 +1,3 @@
-// src/app/components/listar-livros/listar-livros.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
