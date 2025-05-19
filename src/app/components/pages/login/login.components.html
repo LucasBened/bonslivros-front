@@ -1,13 +1,63 @@
 <div class="login-container">
   <div class="login-card">
     <h2>Login</h2>
-    <form (submit)="login(email.value, password.value); $event.preventDefault()">
-      <input #email type="email" placeholder="Email" required />
-      <input #password type="password" placeholder="Senha" required />
-      <button type="submit">Entrar</button>
+    <form (ngSubmit)="login()" #loginForm="ngForm">
+      <div class="form-field">
+        <label for="email">Email:</label>
+        <input
+          id="email"
+          #emailInput="ngModel"
+          type="email"
+          placeholder="O seu email"
+          name="email"
+          [(ngModel)]="credentials.email"
+          required
+          email
+        />
+        <div
+          *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)"
+          class="error-message-field"
+        >
+          <div *ngIf="emailInput.errors?.['required']">
+            Email é obrigatório.
+          </div>
+          <div *ngIf="emailInput.errors?.['email']">
+            Formato de email inválido.
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="password">Senha:</label>
+        <input
+          id="password"
+          #passwordInput="ngModel"
+          type="password"
+          placeholder="A sua senha"
+          name="password"
+          [(ngModel)]="credentials.senha"
+          required
+        />
+        <div
+          *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)"
+          class="error-message-field"
+        >
+          <div *ngIf="passwordInput.errors?.['required']">
+            Senha é obrigatória.
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="loginForm.invalid || isLoading">
+        <span *ngIf="!isLoading">Entrar</span>
+        <span *ngIf="isLoading">A entrar...</span>
+      </button>
     </form>
 
-    <p id="error-message" class="error-message"></p>
+    <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+    <div *ngIf="isLoading && !errorMessage" class="loading-indicator">
+      <p>A verificar...</p>
+    </div>
 
     <div class="link">
       <a routerLink="/cadastro">Não tem uma conta? Cadastre-se</a>
