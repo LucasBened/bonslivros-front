@@ -1,56 +1,154 @@
 <div class="book-list-container">
-  <div class="book-form">
-    <h2>Adicionar Livro</h2>
-    <form
-      (submit)="
-        addBook(titulo.value, autor.value, ano.value);
-        titulo.value = '';
-        autor.value = '';
-        ano.value = '';
-        $event.preventDefault()
-      "
-    >
-      <input #titulo type="text" placeholder="Título" required />
-      <input #autor type="text" placeholder="Autor" required />
-      <input #ano type="number" placeholder="Ano" required />
-      <button type="submit" mat-raised-button color="primary">Adicionar Livro</button>
-    </form>
 
-    <div class="link">
-      <a routerLink="login">Sair</a>
+  <div class="form-sidebar">
+    <div class="book-form-section add-form" *ngIf="!isEditing">
+      <h2>Adicionar Novo Livro</h2>
+      <form (ngSubmit)="handleAddBook()" #addBookForm="ngForm" class="book-form">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Título do Livro</mat-label>
+          <input matInput type="text" placeholder="Ex: O Senhor dos Anéis" [(ngModel)]="newBookData.titulo" name="addTitulo" required>
+          <mat-error *ngIf="addBookForm.controls['addTitulo']?.invalid && addBookForm.controls['addTitulo']?.touched">Título é obrigatório.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>ID do Autor</mat-label>
+          <input matInput type="number" placeholder="Ex: 1" [(ngModel)]="addAutorIdInput" name="addAutorId" required min="1">
+          <mat-error *ngIf="addBookForm.controls['addAutorId']?.invalid && addBookForm.controls['addAutorId']?.touched">ID do Autor é obrigatório e positivo.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Gênero</mat-label>
+          <input matInput type="text" placeholder="Ex: Fantasia" [(ngModel)]="newBookData.genero" name="addGenero" required>
+          <mat-error *ngIf="addBookForm.controls['addGenero']?.invalid && addBookForm.controls['addGenero']?.touched">Gênero é obrigatório.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Editora</mat-label>
+          <input matInput type="text" placeholder="Ex: HarperCollins" [(ngModel)]="newBookData.editora" name="addEditora" required>
+          <mat-error *ngIf="addBookForm.controls['addEditora']?.invalid && addBookForm.controls['addEditora']?.touched">Editora é obrigatória.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Data de Publicação</mat-label>
+          <input matInput type="text" placeholder="DD-MM-YYYY" [(ngModel)]="newBookData.dataPublicacao" name="addDataPublicacao" required pattern="\d{2}-\d{2}-\d{4}">
+          <mat-error *ngIf="addBookForm.controls['addDataPublicacao']?.errors?.['required'] && addBookForm.controls['addDataPublicacao']?.touched">Data é obrigatória.</mat-error>
+          <mat-error *ngIf="addBookForm.controls['addDataPublicacao']?.errors?.['pattern'] && addBookForm.controls['addDataPublicacao']?.touched">Formato DD-MM-YYYY.</mat-error>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="addBookForm.invalid || isLoading">
+          <span *ngIf="!isLoading">Adicionar Livro</span>
+          <span *ngIf="isLoading">A Adicionar...</span>
+        </button>
+      </form>
     </div>
-  </div>
 
-  <div class="book-table">
-    <h2>Livros Cadastrados</h2>
+    <div class="book-form-section edit-form" *ngIf="isEditing && currentEditingBook">
+      <h2>Editar Livro: {{ currentEditingBook.titulo }}</h2>
+      <form (ngSubmit)="handleUpdateBook()" #editBookForm="ngForm" class="book-form">
+        <input type="hidden" [(ngModel)]="editBookFormModel.id" name="editId">
 
-    <table mat-table [dataSource]="books" class="mat-elevation-z8" *ngIf="books.length > 0">
-      <ng-container matColumnDef="titulo">
-        <th mat-header-cell *matHeaderCellDef> Título </th>
-        <td mat-cell *matCellDef="let book"> {{ book.titulo }} </td>
-      </ng-container>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Título do Livro</mat-label>
+          <input matInput type="text" [(ngModel)]="editBookFormModel.titulo" name="editTitulo" required>
+          <mat-error *ngIf="editBookForm.controls['editTitulo']?.invalid && editBookForm.controls['editTitulo']?.touched">Título é obrigatório.</mat-error>
+        </mat-form-field>
 
-      <ng-container matColumnDef="autor">
-        <th mat-header-cell *matHeaderCellDef> Autor </th>
-        <td mat-cell *matCellDef="let book"> {{ book.autor }} </td>
-      </ng-container>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>ID do Autor</mat-label>
+          <input matInput type="number" [(ngModel)]="editBookFormModel.autorId" name="editAutorId" required min="1">
+           <mat-error *ngIf="editBookForm.controls['editAutorId']?.invalid && editBookForm.controls['editAutorId']?.touched">ID do Autor é obrigatório e positivo.</mat-error>
+        </mat-form-field>
 
-      <ng-container matColumnDef="ano">
-        <th mat-header-cell *matHeaderCellDef> Ano </th>
-        <td mat-cell *matCellDef="let book"> {{ book.ano }} </td>
-      </ng-container>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Gênero</mat-label>
+          <input matInput type="text" [(ngModel)]="editBookFormModel.genero" name="editGenero" required>
+          <mat-error *ngIf="editBookForm.controls['editGenero']?.invalid && editBookForm.controls['editGenero']?.touched">Gênero é obrigatório.</mat-error>
+        </mat-form-field>
 
-      <ng-container matColumnDef="acoes">
-        <th mat-header-cell *matHeaderCellDef> Ações </th>
-        <td mat-cell *matCellDef="let book; let i = index">
-          <button mat-button color="warn" (click)="deleteBook(i)">Excluir</button>
-        </td>
-      </ng-container>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Editora</mat-label>
+          <input matInput type="text" [(ngModel)]="editBookFormModel.editora" name="editEditora" required>
+          <mat-error *ngIf="editBookForm.controls['editEditora']?.invalid && editBookForm.controls['editEditora']?.touched">Editora é obrigatória.</mat-error>
+        </mat-form-field>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Data de Publicação</mat-label>
+          <input matInput type="text" placeholder="DD-MM-YYYY" [(ngModel)]="editBookFormModel.dataPublicacao" name="editDataPublicacao" required pattern="\d{2}-\d{2}-\d{4}">
+          <mat-error *ngIf="editBookForm.controls['editDataPublicacao']?.errors?.['required'] && editBookForm.controls['editDataPublicacao']?.touched">Data é obrigatória.</mat-error>
+          <mat-error *ngIf="editBookForm.controls['editDataPublicacao']?.errors?.['pattern'] && editBookForm.controls['editDataPublicacao']?.touched">Formato DD-MM-YYYY.</mat-error>
+        </mat-form-field>
 
-    <p *ngIf="books.length === 0">Nenhum livro cadastrado.</p>
-  </div>
-</div>
+        <div class="edit-form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="editBookForm.invalid || isLoading">
+            <span *ngIf="!isLoading">Salvar Alterações</span>
+            <span *ngIf="isLoading">A Salvar...</span>
+          </button>
+          <button mat-stroked-button type="button" (click)="cancelEditBook()" [disabled]="isLoading">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div> <div class="table-main-content">
+    <div *ngIf="isLoading && !message" class="loading-indicator">
+      <p>A carregar...</p>
+      </div>
+    <div *ngIf="message" class="feedback-message" [ngClass]="{
+      'message-success': messageType === 'success',
+      'message-error': messageType === 'error',
+      'message-info': messageType === 'info'
+    }">
+      {{ message }}
+    </div>
+
+    <div class="book-table-section">
+      <h2>Livros Cadastrados</h2>
+      <div class="table-actions">
+          <button mat-stroked-button color="accent" (click)="loadBooks()" [disabled]="isLoading || isEditing" class="refresh-button">
+              <mat-icon>refresh</mat-icon> Recarregar Livros
+          </button>
+          <button mat-stroked-button (click)="logout()" class="logout-button">
+              <mat-icon>exit_to_app</mat-icon> Sair
+          </button>
+      </div>
+
+      <div *ngIf="!isLoading && books.length > 0" class="table-responsive mat-elevation-z8">
+        <table mat-table [dataSource]="books">
+          <ng-container matColumnDef="titulo">
+            <th mat-header-cell *matHeaderCellDef> Título </th>
+            <td mat-cell *matCellDef="let book"> {{ book.titulo }} </td>
+          </ng-container>
+          <ng-container matColumnDef="autorDetalhes">
+            <th mat-header-cell *matHeaderCellDef> Autor </th>
+            <td mat-cell *matCellDef="let book">ID: {{ book.autor.id }}<span *ngIf="book.autor.nome"> ({{ book.autor.nome }})</span></td>
+          </ng-container>
+          <ng-container matColumnDef="genero">
+            <th mat-header-cell *matHeaderCellDef> Gênero </th>
+            <td mat-cell *matCellDef="let book"> {{ book.genero }} </td>
+          </ng-container>
+          <ng-container matColumnDef="editora">
+            <th mat-header-cell *matHeaderCellDef> Editora </th>
+            <td mat-cell *matCellDef="let book"> {{ book.editora }} </td>
+          </ng-container>
+          <ng-container matColumnDef="dataPublicacao">
+            <th mat-header-cell *matHeaderCellDef> Publicação </th>
+            <td mat-cell *matCellDef="let book"> {{ book.dataPublicacao }} </td>
+          </ng-container>
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef> Ações </th>
+            <td mat-cell *matCellDef="let book">
+              <button mat-icon-button color="primary" (click)="startEditBook(book)" aria-label="Editar livro" [disabled]="isLoading || isEditing">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="handleDeleteBook(book.id)" aria-label="Excluir livro" [disabled]="isLoading || isEditing">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+      <div *ngIf="!isLoading && books.length === 0 && (messageType !== 'error' && messageType !== 'success')" class="empty-state">
+        <p>Nenhum livro para exibir.</p>
+      </div>
+    </div>
+  </div> </div> 

@@ -1,15 +1,118 @@
 <div class="register-container">
   <div class="register-card">
     <h2>Cadastro</h2>
-    <form (submit)="register(name.value, email.value, password.value, cpf.value); $event.preventDefault()">
-      <input #name type="text" placeholder="Nome completo" required />
-      <input #email type="email" placeholder="Email" required />
-      <input #password type="password" placeholder="Senha" required />
-      <input #cpf type="text" placeholder="CPF" required pattern="\d{11}" />
-      <button type="submit">Cadastrar</button>
+    <form (ngSubmit)="register()" #registerForm="ngForm">
+      <div class="form-field">
+        <label for="nome">Nome completo:</label>
+        <input
+          id="nome"
+          #nomeInput="ngModel"
+          type="text"
+          placeholder="O seu nome completo"
+          name="nome"
+          [(ngModel)]="userData.nome"
+          required
+        />
+        <div
+          *ngIf="nomeInput.invalid && (nomeInput.dirty || nomeInput.touched)"
+          class="error-message-field"
+        >
+          <div *ngIf="nomeInput.errors?.['required']">Nome é obrigatório.</div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="email">Email:</label>
+        <input
+          id="email"
+          #emailInput="ngModel"
+          type="email"
+          placeholder="O seu email"
+          name="email"
+          [(ngModel)]="userData.email"
+          required
+          email
+        />
+        <div
+          *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)"
+          class="error-message-field"
+        >
+          <div *ngIf="emailInput.errors?.['required']">
+            Email é obrigatório.
+          </div>
+          <div *ngIf="emailInput.errors?.['email']">
+            Formato de email inválido.
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="senha">Senha:</label>
+        <input
+          id="senha"
+          #senhaInput="ngModel"
+          type="password"
+          placeholder="A sua senha"
+          name="senha"
+          [(ngModel)]="userData.senha"
+          required
+          minlength="4"
+        />
+        <div
+          *ngIf="senhaInput.invalid && (senhaInput.dirty || senhaInput.touched)"
+          class="error-message-field"
+        >
+          <div *ngIf="senhaInput.errors?.['required']">
+            Senha é obrigatória.
+          </div>
+          <div *ngIf="senhaInput.errors?.['minlength']">
+            A senha deve ter pelo menos 4 caracteres.
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="cpf">CPF (apenas números):</label>
+        <input
+          id="cpf"
+          #cpfInput="ngModel"
+          type="text"
+          placeholder="Seu CPF (11 dígitos)"
+          name="cpf"
+          [(ngModel)]="userData.cpf"
+          required
+          pattern="\d{11}"
+        />
+        <div
+          *ngIf="cpfInput.invalid && (cpfInput.dirty || cpfInput.touched)"
+          class="error-message-field"
+        >
+          <div *ngIf="cpfInput.errors?.['required']">CPF é obrigatório.</div>
+          <div *ngIf="cpfInput.errors?.['pattern']">
+            CPF deve conter 11 dígitos numéricos.
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="registerForm.invalid || isLoading">
+        <span *ngIf="!isLoading">Cadastrar</span>
+        <span *ngIf="isLoading">A cadastrar...</span>
+      </button>
     </form>
 
-    <p id="msg" class="message"></p>
+    <p
+      *ngIf="message"
+      class="feedback-message"
+      [ngClass]="{
+        'message-success': messageType === 'success',
+        'message-error': messageType === 'error'
+      }"
+    >
+      {{ message }}
+    </p>
+    <div *ngIf="isLoading && !message" class="loading-indicator">
+      <p>A processar...</p>
+    </div>
 
     <div class="link">
       <a routerLink="/login">Já tem uma conta? Entrar</a>
