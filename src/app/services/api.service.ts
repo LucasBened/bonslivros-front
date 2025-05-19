@@ -8,7 +8,7 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
-// --- Interfaces (mantidas como antes) ---
+// --- Interfaces ---
 export interface UserRegisterPayload {
   nome: string;
   email: string;
@@ -22,31 +22,31 @@ export interface UserLoginPayload {
 }
 
 export interface LoginResponse {
+  // O backend retorna o objeto Autor completo no login
   message?: string;
-  id?: number;
+  id?: number; // ID do Autor
   nome?: string;
   email?: string;
+  // Adicione outros campos do Autor que o backend possa retornar, se útil
 }
 
 export interface AuthorPayload {
+  // Usado para enviar apenas o ID do autor
   id: number;
 }
 
-// Usado para criar um novo livro
 export interface BookRegisterPayload {
   titulo: string;
-  autor: AuthorPayload; // Apenas o ID do autor
+  autor: AuthorPayload; // Continuará a enviar { "id": authorId }
   genero: string;
   editora: string;
   dataPublicacao: string;
 }
 
-// Representa um livro como recebido do backend (com ID do livro e detalhes do autor)
-// Também será usado como payload para atualização, pois o backend espera o objeto Livro completo.
 export interface BookResponse {
   id: number;
   titulo: string;
-  autor: { id: number; nome?: string }; // Backend pode retornar nome, para update enviamos só ID em autor
+  autor: { id: number; nome?: string };
   genero: string;
   editora: string;
   dataPublicacao: string;
@@ -58,19 +58,17 @@ export interface BookResponse {
 export class ApiService {
   private baseUrl = 'http://localhost:8080/livraria';
   private userIsCurrentlyLoggedIn: boolean = false;
+  private loggedInAuthorId: number | null = null; // Para armazenar o ID do autor logado
 
   constructor(private http: HttpClient) {}
 
-  // --- Métodos de Autenticação e Usuário (sem alterações) ---
+  // --- Métodos de Autenticação e Usuário ---
   register(userData: UserRegisterPayload): Observable<any> {
     const url = `${this.baseUrl}/autor/registro`;
-    console.log(
-      'ApiService (NoToken): Tentando registar utilizador:',
-      userData
-    );
+    console.log('ApiService: Tentando registar utilizador:', userData);
     return this.http.post<any>(url, userData).pipe(
       tap((response) =>
-        console.log('ApiService (NoToken): Resposta do registo:', response)
+        console.log('ApiService: Resposta do registo:', response)
       ),
       catchError(this.handleError)
     );
@@ -78,40 +76,58 @@ export class ApiService {
 
   login(credentials: UserLoginPayload): Observable<LoginResponse> {
     const url = `${this.baseUrl}/login`;
-    console.log(
-      'ApiService (NoToken): Tentando login com credenciais:',
-      credentials
-    );
+    console.log('ApiService: Tentando login com credenciais:', credentials);
     return this.http.post<LoginResponse>(url, credentials).pipe(
       tap((response) => {
-        console.log(
-          'ApiService (NoToken): Resposta da API de Login:',
-          response
-        );
-        this.userIsCurrentlyLoggedIn = true;
-        console.log('ApiService (NoToken): Utilizador marcado como LOGADO.');
+        console.log('ApiService: Resposta da API de Login:', response);
+        if (response && response.id) {
+          // Verifica se o ID do autor foi retornado
+          this.userIsCurrentlyLoggedIn = true;
+          this.loggedInAuthorId = response.id; // Armazena o ID do autor
+          console.log(
+            'ApiService: Utilizador marcado como LOGADO. ID do Autor:',
+            this.loggedInAuthorId
+          );
+        } else {
+          // Se o backend não retornar o ID ou a estrutura esperada, o login falha do ponto de vista do frontend
+          this.userIsCurrentlyLoggedIn = false;
+          this.loggedInAuthorId = null;
+          console.warn(
+            'ApiService: Login bem-sucedido no backend, mas ID do autor não encontrado na resposta. Login no frontend considerado falho.'
+          );
+          // Poderia até mesmo lançar um erro aqui para o componente de login tratar
+          // throw new Error('Resposta de login inválida: ID do autor ausente.');
+        }
       }),
       catchError((error) => {
         this.userIsCurrentlyLoggedIn = false;
-        console.warn(
-          'ApiService (NoToken): Erro no login, utilizador NÃO está logado.'
-        );
+        this.loggedInAuthorId = null;
+        console.warn('ApiService: Erro no login, utilizador NÃO está logado.');
         return this.handleError(error);
       })
     );
   }
 
   logout(): void {
-    console.log('ApiService (NoToken): Efetuando logout.');
+    console.log('ApiService: Efetuando logout.');
     this.userIsCurrentlyLoggedIn = false;
+    this.loggedInAuthorId = null; // Limpa o ID do autor ao sair
   }
 
   isLoggedIn(): boolean {
     console.log(
-      'ApiService (NoToken): Verificando estado de login:',
+      'ApiService: Verificando estado de login:',
       this.userIsCurrentlyLoggedIn
     );
     return this.userIsCurrentlyLoggedIn;
+  }
+
+  getLoggedInAuthorId(): number | null {
+    console.log(
+      'ApiService: getLoggedInAuthorId() chamado, ID retornado:',
+      this.loggedInAuthorId
+    );
+    return this.loggedInAuthorId;
   }
 
   private getRequestHeaders(): HttpHeaders {
@@ -123,10 +139,9 @@ export class ApiService {
   // --- Métodos de Livros ---
   getBooks(): Observable<BookResponse[]> {
     const url = `${this.baseUrl}`;
-    console.log('ApiService (NoToken): A obter livros de:', url);
     return this.http.get<BookResponse[]>(url).pipe(
       tap((response) =>
-        console.log('ApiService (NoToken): Resposta de getBooks:', response)
+        console.log('ApiService: Resposta de getBooks:', response)
       ),
       catchError(this.handleError)
     );
@@ -134,35 +149,30 @@ export class ApiService {
 
   addBook(bookData: BookRegisterPayload): Observable<BookResponse> {
     const url = `${this.baseUrl}`;
-    console.log('ApiService (NoToken): A adicionar livro:', bookData);
+    console.log('ApiService: A adicionar livro:', bookData); // O bookData já deve vir com o autor.id correto
     return this.http
       .post<BookResponse>(url, bookData, { headers: this.getRequestHeaders() })
       .pipe(
         tap((response) =>
-          console.log('ApiService (NoToken): Resposta de addBook:', response)
+          console.log('ApiService: Resposta de addBook:', response)
         ),
         catchError(this.handleError)
       );
   }
 
-  // NOVO MÉTODO PARA ATUALIZAR LIVRO
   updateBook(bookId: number, bookData: BookResponse): Observable<BookResponse> {
-    const url = `${this.baseUrl}/${bookId}`; // PUT para /livraria/{id}
+    const url = `${this.baseUrl}/${bookId}`;
     console.log(
-      'ApiService (NoToken): A atualizar livro com ID:',
+      'ApiService: A atualizar livro com ID:',
       bookId,
       'Dados:',
-      bookData,
-      'URL:',
-      url
-    );
-    // O backend espera o objeto Livro completo no corpo, incluindo o ID.
-    // O bookData já deve conter o ID do livro.
+      bookData
+    ); // bookData já deve ter autor.id
     return this.http
       .put<BookResponse>(url, bookData, { headers: this.getRequestHeaders() })
       .pipe(
         tap((response) =>
-          console.log('ApiService (NoToken): Resposta de updateBook:', response)
+          console.log('ApiService: Resposta de updateBook:', response)
         ),
         catchError(this.handleError)
       );
@@ -171,7 +181,7 @@ export class ApiService {
   deleteBook(bookId: number): Observable<any> {
     const url = `${this.baseUrl}/${bookId}`;
     console.log(
-      'ApiService (NoToken): A deletar livro com ID:',
+      'ApiService: A deletar livro com ID:',
       bookId,
       'para URL:',
       url
@@ -180,16 +190,16 @@ export class ApiService {
       .delete<any>(url, { headers: this.getRequestHeaders() })
       .pipe(
         tap((response) =>
-          console.log('ApiService (NoToken): Resposta de deleteBook:', response)
+          console.log('ApiService: Resposta de deleteBook:', response)
         ),
         catchError(this.handleError)
       );
   }
 
-  // --- Tratamento de Erros (sem alterações) ---
+  // --- Tratamento de Erros ---
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Ocorreu um erro desconhecido!';
-    console.error('ApiService (NoToken): Erro HTTP Detetado:', error);
+    console.error('ApiService: Erro HTTP Detetado:', error);
     if (error.status === 0 || error.error instanceof ProgressEvent) {
       errorMessage =
         'Não foi possível conectar ao servidor. Verifique sua rede ou se o backend está rodando.';
@@ -213,10 +223,7 @@ export class ApiService {
         error.statusText || 'Erro no servidor'
       }`;
     }
-    console.error(
-      'ApiService (NoToken): Mensagem de erro tratada:',
-      errorMessage
-    );
+    console.error('ApiService: Mensagem de erro tratada:', errorMessage);
     return throwError(() => new Error(errorMessage));
   }
 }
