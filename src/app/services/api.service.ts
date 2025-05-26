@@ -7,7 +7,6 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
-// --- Interfaces ---
 export interface UserRegisterPayload {
   nome: string;
   email: string;
@@ -21,22 +20,19 @@ export interface UserLoginPayload {
 }
 
 export interface LoginResponse {
-  // O backend retorna o objeto Autor completo no login
   message?: string;
-  id?: number; // ID do Autor
+  id?: number;
   nome?: string;
   email?: string;
-  // Adicione outros campos do Autor que o backend possa retornar, se útil
 }
 
 export interface AuthorPayload {
-  // Usado para enviar apenas o ID do autor
   id: number;
 }
 
 export interface BookRegisterPayload {
   titulo: string;
-  autor: AuthorPayload; // Continuará a enviar { "id": authorId }
+  autor: AuthorPayload; 
   genero: string;
   editora: string;
   dataPublicacao: string;
@@ -57,7 +53,7 @@ export interface BookResponse {
 export class ApiService {
   private baseUrl = 'http://localhost:8080/livraria';
   private userIsCurrentlyLoggedIn: boolean = false;
-  private loggedInAuthorId: number | null = null; // Para armazenar o ID do autor logado
+  private loggedInAuthorId: number | null = null; 
 
   constructor(private http: HttpClient) {}
 
@@ -80,22 +76,18 @@ export class ApiService {
       tap((response) => {
         console.log('ApiService: Resposta da API de Login:', response);
         if (response && response.id) {
-          // Verifica se o ID do autor foi retornado
           this.userIsCurrentlyLoggedIn = true;
-          this.loggedInAuthorId = response.id; // Armazena o ID do autor
+          this.loggedInAuthorId = response.id;
           console.log(
             'ApiService: Utilizador marcado como LOGADO. ID do Autor:',
             this.loggedInAuthorId
           );
         } else {
-          // Se o backend não retornar o ID ou a estrutura esperada, o login falha do ponto de vista do frontend
           this.userIsCurrentlyLoggedIn = false;
           this.loggedInAuthorId = null;
           console.warn(
             'ApiService: Login bem-sucedido no backend, mas ID do autor não encontrado na resposta. Login no frontend considerado falho.'
           );
-          // Poderia até mesmo lançar um erro aqui para o componente de login tratar
-          // throw new Error('Resposta de login inválida: ID do autor ausente.');
         }
       }),
       catchError((error) => {
@@ -110,7 +102,7 @@ export class ApiService {
   logout(): void {
     console.log('ApiService: Efetuando logout.');
     this.userIsCurrentlyLoggedIn = false;
-    this.loggedInAuthorId = null; // Limpa o ID do autor ao sair
+    this.loggedInAuthorId = null; 
   }
 
   isLoggedIn(): boolean {
@@ -148,7 +140,7 @@ export class ApiService {
 
   addBook(bookData: BookRegisterPayload): Observable<BookResponse> {
     const url = `${this.baseUrl}`;
-    console.log('ApiService: A adicionar livro:', bookData); // O bookData já deve vir com o autor.id correto
+    console.log('ApiService: A adicionar livro:', bookData);
     return this.http
       .post<BookResponse>(url, bookData, { headers: this.getRequestHeaders() })
       .pipe(
@@ -166,7 +158,7 @@ export class ApiService {
       bookId,
       'Dados:',
       bookData
-    ); // bookData já deve ter autor.id
+    );;
     return this.http
       .put<BookResponse>(url, bookData, { headers: this.getRequestHeaders() })
       .pipe(

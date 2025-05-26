@@ -43,33 +43,27 @@ export class BookListComponent implements OnInit {
     'acoes',
   ];
 
-  // Para o formulário de adicionar novo livro
   newBookData: Omit<BookRegisterPayload, 'autor'> & {
     autor?: { id: number | null };
   } = {
-    // Omit 'autor' para definir depois
     titulo: '',
-    // autor: { id: 0 }, // Será definido com o ID do autor logado
     genero: '',
     editora: '',
     dataPublicacao: '',
   };
-  // REMOVIDO: addAutorIdInput: number | null = null;
 
-  // Para o formulário de edição
   isEditing: boolean = false;
   currentEditingBook: BookResponse | null = null;
   editBookFormModel: {
     id: number;
     titulo: string;
-    // REMOVIDO: autorId: number | null;
     genero: string;
     editora: string;
     dataPublicacao: string;
   } = {
     id: 0,
     titulo: '',
-    /* autorId: null, */ genero: '',
+    genero: '',
     editora: '',
     dataPublicacao: '',
   };
@@ -139,7 +133,7 @@ export class BookListComponent implements OnInit {
 
     const payload: BookRegisterPayload = {
       titulo: this.newBookData.titulo,
-      autor: { id: loggedInAuthorId }, // Usa o ID do autor logado
+      autor: { id: loggedInAuthorId }, 
       genero: this.newBookData.genero,
       editora: this.newBookData.editora,
       dataPublicacao: this.newBookData.dataPublicacao,
@@ -155,7 +149,7 @@ export class BookListComponent implements OnInit {
           genero: '',
           editora: '',
           dataPublicacao: '',
-        }; // Limpa formulário
+        }; 
         this.isLoading = false;
       },
       error: (err) => this.handleApiError(err, 'Falha ao adicionar o livro.'),
@@ -165,12 +159,11 @@ export class BookListComponent implements OnInit {
   // --- Lógica para Editar Livro ---
   startEditBook(book: BookResponse): void {
     this.isEditing = true;
-    this.currentEditingBook = { ...book }; // Cria uma cópia para evitar mutação direta do objeto na lista
+    this.currentEditingBook = { ...book }; 
 
     this.editBookFormModel = {
       id: book.id,
       titulo: book.titulo,
-      // autorId não é mais necessário no formulário, pois será o autor logado
       genero: book.genero,
       editora: book.editora,
       dataPublicacao: book.dataPublicacao,
@@ -213,7 +206,7 @@ export class BookListComponent implements OnInit {
     const updatePayload: BookResponse = {
       id: this.editBookFormModel.id,
       titulo: this.editBookFormModel.titulo,
-      autor: { id: loggedInAuthorId, nome: this.currentEditingBook.autor.nome }, // Usa ID do autor logado. Mantém nome original para exibição se não for mudar.
+      autor: { id: loggedInAuthorId, nome: this.currentEditingBook.autor.nome }, 
       genero: this.editBookFormModel.genero,
       editora: this.editBookFormModel.editora,
       dataPublicacao: this.editBookFormModel.dataPublicacao,
@@ -246,7 +239,7 @@ export class BookListComponent implements OnInit {
     this.message = '';
   }
 
-  // --- Lógica para Deletar Livro (sem alterações) ---
+  // --- Lógica para Deletar Livro---
   handleDeleteBook(bookId: number): void {
     if (bookId === null || bookId === undefined || isNaN(bookId)) {
       this.message = 'ID do livro inválido para exclusão.';
