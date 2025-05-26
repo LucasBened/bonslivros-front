@@ -3,9 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
-// Importe o ApiService e a interface UserRegisterPayload.
-// Não precisamos mais de AuthResponse aqui para o registo.
-import { ApiService, UserRegisterPayload } from '../../../services/api.service'; // Ajuste o caminho se necessário
+import { ApiService, UserRegisterPayload } from '../../../services/api.service'; 
 
 @Component({
   selector: 'app-register',
@@ -47,13 +45,10 @@ export class RegisterComponent {
     this.isLoading = true;
     this.message = '';
 
-    // O método register do ApiService agora retorna Observable<any>
     this.apiService.register(this.userData).subscribe({
       next: (response: any) => {
-        // O tipo da resposta é 'any'
         this.isLoading = false;
         console.log('Cadastro realizado:', response);
-        // A resposta do backend para o registo pode ter uma mensagem, ou podemos usar uma padrão.
         this.message =
           response?.message ||
           'Cadastro realizado com sucesso! Redirecionando para login...';
