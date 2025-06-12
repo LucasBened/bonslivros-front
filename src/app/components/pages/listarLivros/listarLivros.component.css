@@ -1,7 +1,6 @@
-/* Geral */
 :host {
   display: block;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte mais neutra */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
   background-color: #eef1f5; /* Fundo geral da página um pouco mais claro */
   color: #333;
   height: 100vh;
@@ -18,7 +17,6 @@
 
 
 
-/* Sidebar para os Formulários (Adicionar/Editar) */
 .form-sidebar {
   width: 320px; /* LARGURA REDUZIDA para a sidebar */
   flex-shrink: 0; /* Impede que a sidebar encolha */
@@ -32,20 +30,24 @@
 }
 
 .book-form-section h2 {
-  font-size: 1.4em; /* Tamanho do título do formulário ajustado */
+  font-size: 1.4em; 
   color: #2c3e50;
   margin-top: 0;
-  margin-bottom: 20px; /* Reduzido margin-bottom */
-  padding-bottom: 10px; /* Reduzido padding-bottom */
+  margin-bottom: 20px; 
+  padding-bottom: 10px; 
   border-bottom: 1px solid #dee4e7;
 }
 
 .book-form .form-field {
   width: 100%;
-  margin-bottom: 14px; /* Reduzido margin-bottom */
+  margin-bottom: 14px;
 }
 
-/* Estilizando os mat-form-field com cores mais neutras */
+.book-form .form-field label {
+  font-size: 0.95em;
+  color: #495057;
+}
+
 :host ::ng-deep .form-sidebar .mat-mdc-form-field .mdc-text-field--outlined .mdc-notched-outline__leading,
 :host ::ng-deep .form-sidebar .mat-mdc-form-field .mdc-text-field--outlined .mdc-notched-outline__notch,
 :host ::ng-deep .form-sidebar .mat-mdc-form-field .mdc-text-field--outlined .mdc-notched-outline__trailing {
@@ -76,7 +78,7 @@
   color: white;
   width: 100%;
   padding: 10px 0;
-  font-size: 0.95em; /* Ajustado tamanho da fonte do botão */
+  font-size: 0.95em;
   border-radius: 6px;
   transition: background-color 0.2s ease;
   margin-top: 8px;
